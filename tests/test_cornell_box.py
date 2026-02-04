@@ -3,7 +3,7 @@
 Tests cover:
 - Scene creation and geometry counts
 - Wall positions and orientations
-- Sphere positions and materials
+- Sphere positions and materials (diffuse, phosphorescent, glass)
 - Camera configuration
 - Material assignments
 - Light quad geometry
@@ -68,7 +68,7 @@ class TestSceneCreation:
         - White wall (Lambertian)
         - Light (Lambertian placeholder)
         - Diffuse sphere (Lambertian)
-        - Metal sphere (Metal)
+        - Phosphorescent sphere (Phosphorescent)
         - Glass sphere (Dielectric)
         Total: 7 materials
         """
@@ -94,13 +94,13 @@ class TestMaterialAssignments:
         for i in range(5):
             assert scene.get_material_type_python(i) == MaterialType.LAMBERTIAN
 
-    def test_metal_material_created(self, cornell_box_scene):
-        """Test that Metal material is created correctly."""
+    def test_phosphorescent_material_created(self, cornell_box_scene):
+        """Test that Phosphorescent material is created correctly."""
         from src.python.scene.manager import MaterialType
 
         scene, _ = cornell_box_scene
-        # Material 5 should be Metal (gold sphere)
-        assert scene.get_material_type_python(5) == MaterialType.METAL
+        # Material 5 should be Phosphorescent (glow sphere)
+        assert scene.get_material_type_python(5) == MaterialType.PHOSPHORESCENT
 
     def test_dielectric_material_created(self, cornell_box_scene):
         """Test that Dielectric material is created correctly."""
@@ -265,17 +265,17 @@ class TestSphereGeometry:
         # Should be resting on floor (y = radius)
         assert abs(diffuse_sphere.center[1] - diffuse_sphere.radius) < 0.01
 
-    def test_metal_sphere_position(self, cornell_box_scene):
-        """Test metal sphere is on right side of box."""
+    def test_phosphorescent_sphere_position(self, cornell_box_scene):
+        """Test phosphorescent sphere is on right side of box."""
         from src.python.scene.cornell_box import BOX_SIZE
 
         scene, _ = cornell_box_scene
-        metal_sphere = scene.spheres[1]
+        phosphorescent_sphere = scene.spheres[1]
 
         # Should be on right side (x > center)
-        assert metal_sphere.center[0] > BOX_SIZE / 2.0
+        assert phosphorescent_sphere.center[0] > BOX_SIZE / 2.0
         # Should be resting on floor (y = radius)
-        assert abs(metal_sphere.center[1] - metal_sphere.radius) < 0.01
+        assert abs(phosphorescent_sphere.center[1] - phosphorescent_sphere.radius) < 0.01
 
     def test_glass_sphere_position(self, cornell_box_scene):
         """Test glass sphere is centered and on floor."""
@@ -298,14 +298,14 @@ class TestSphereGeometry:
         assert diffuse_sphere.material_id == 4  # Diffuse sphere material
         assert scene.get_material_type_python(4) == MaterialType.LAMBERTIAN
 
-    def test_metal_sphere_material(self, cornell_box_scene):
-        """Test metal sphere has Metal material."""
+    def test_phosphorescent_sphere_material(self, cornell_box_scene):
+        """Test phosphorescent sphere has Phosphorescent material."""
         from src.python.scene.manager import MaterialType
 
         scene, _ = cornell_box_scene
-        metal_sphere = scene.spheres[1]
-        assert metal_sphere.material_id == 5  # Metal sphere material
-        assert scene.get_material_type_python(5) == MaterialType.METAL
+        phosphorescent_sphere = scene.spheres[1]
+        assert phosphorescent_sphere.material_id == 5  # Phosphorescent sphere material
+        assert scene.get_material_type_python(5) == MaterialType.PHOSPHORESCENT
 
     def test_glass_sphere_material(self, cornell_box_scene):
         """Test glass sphere has Dielectric material."""

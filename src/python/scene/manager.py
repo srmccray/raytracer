@@ -40,6 +40,12 @@ from src.python.materials.metal import (
     add_metal_material,
     clear_metal_materials,
 )
+from src.python.materials.phosphorescent import (
+    add_phosphorescent_material as _add_phosphorescent_material,
+)
+from src.python.materials.phosphorescent import (
+    clear_phosphorescent_materials,
+)
 from src.python.scene.intersection import (
     MAX_QUADS,
     MAX_SPHERES,
@@ -64,10 +70,11 @@ class MaterialType(IntEnum):
     LAMBERTIAN = 0
     METAL = 1
     DIELECTRIC = 2
+    PHOSPHORESCENT = 3
 
 
 # Maximum number of materials across all types
-MAX_MATERIALS = 768  # 256 per type * 3 types
+MAX_MATERIALS = 1024  # 256 per type * 4 types
 
 # Taichi fields for GPU-side material type lookup
 # material_types[i] stores the MaterialType for material_id i
@@ -230,6 +237,7 @@ class SceneManager:
         clear_lambertian_materials()
         clear_metal_materials()
         clear_dielectric_materials()
+        clear_phosphorescent_materials()
         # Clear material tracking
         _clear_material_tracking()
         # Clear local tracking
@@ -369,6 +377,63 @@ class SceneManager:
             material_type=MaterialType.DIELECTRIC,
             type_index=type_index,
             params={"ior": ior},
+        )
+        self.materials.append(info)
+
+        return material_id
+
+    def add_phosphorescent_material(
+        self,
+        albedo: tuple[float, float, float],
+        glow_color: tuple[float, float, float],
+        glow_intensity: float,
+    ) -> int:
+        """Add a phosphorescent (glow-in-the-dark) material to the scene.
+
+        Phosphorescent materials both scatter light diffusely (like Lambertian)
+        and emit light. The emission is constant and does not depend on incoming
+        light.
+
+        Args:
+            albedo: The diffuse reflectance color as (R, G, B) tuple.
+                Each component should be in [0, 1] for energy conservation.
+            glow_color: The emission color as (R, G, B) tuple.
+                Values can exceed 1.0 for HDR effects.
+            glow_intensity: The emission strength. Typical range is 0-10.
+                Must be non-negative.
+
+        Returns:
+            The unified material ID for this material.
+
+        Raises:
+            RuntimeError: If the maximum number of materials is exceeded.
+            ValueError: If any albedo component is outside [0, 1].
+            ValueError: If any glow_color component is negative.
+            ValueError: If glow_intensity is negative.
+        """
+        # Add to type-specific registry (validation happens there)
+        type_index = _add_phosphorescent_material(albedo, glow_color, glow_intensity)
+
+        # Assign unified material ID
+        material_id = num_materials[None]
+        if material_id >= MAX_MATERIALS:
+            raise RuntimeError(f"Maximum number of materials ({MAX_MATERIALS}) exceeded")
+
+        # Update Taichi fields
+        material_types[material_id] = int(MaterialType.PHOSPHORESCENT)
+        material_type_indices[material_id] = type_index
+        num_materials[None] = material_id + 1
+
+        # Track locally
+        info = MaterialInfo(
+            material_id=material_id,
+            material_type=MaterialType.PHOSPHORESCENT,
+            type_index=type_index,
+            params={
+                "albedo": albedo,
+                "glow_color": glow_color,
+                "glow_intensity": glow_intensity,
+            },
         )
         self.materials.append(info)
 
@@ -636,6 +701,62 @@ class SceneManager:
         quad_index = self.add_quad(corner, edge_u, edge_v, material_id)
         return quad_index, material_id
 
+    def add_phosphorescent_sphere(
+        self,
+        center: tuple[float, float, float],
+        radius: float,
+        albedo: tuple[float, float, float],
+        glow_color: tuple[float, float, float],
+        glow_intensity: float,
+    ) -> tuple[int, int]:
+        """Add a sphere with a new phosphorescent material.
+
+        Convenience method that creates a phosphorescent material and sphere
+        in one call.
+
+        Args:
+            center: The center point of the sphere as (x, y, z).
+            radius: The radius of the sphere.
+            albedo: The diffuse reflectance color as (R, G, B).
+            glow_color: The emission color as (R, G, B).
+            glow_intensity: The emission strength.
+
+        Returns:
+            Tuple of (sphere_index, material_id).
+        """
+        material_id = self.add_phosphorescent_material(albedo, glow_color, glow_intensity)
+        sphere_index = self.add_sphere(center, radius, material_id)
+        return sphere_index, material_id
+
+    def add_phosphorescent_quad(
+        self,
+        corner: tuple[float, float, float],
+        edge_u: tuple[float, float, float],
+        edge_v: tuple[float, float, float],
+        albedo: tuple[float, float, float],
+        glow_color: tuple[float, float, float],
+        glow_intensity: float,
+    ) -> tuple[int, int]:
+        """Add a quad with a new phosphorescent material.
+
+        Convenience method that creates a phosphorescent material and quad
+        in one call.
+
+        Args:
+            corner: The corner point of the quad as (x, y, z).
+            edge_u: The first edge vector.
+            edge_v: The second edge vector.
+            albedo: The diffuse reflectance color as (R, G, B).
+            glow_color: The emission color as (R, G, B).
+            glow_intensity: The emission strength.
+
+        Returns:
+            Tuple of (quad_index, material_id).
+        """
+        material_id = self.add_phosphorescent_material(albedo, glow_color, glow_intensity)
+        quad_index = self.add_quad(corner, edge_u, edge_v, material_id)
+        return quad_index, material_id
+
     # =========================================================================
     # Scene Queries
     # =========================================================================
@@ -725,6 +846,17 @@ class SceneManager:
             elif mat_type == "dielectric":
                 ior = mat_config.get("ior", 1.5)
                 self.add_dielectric_material(ior)
+            elif mat_type == "phosphorescent":
+                albedo_list = mat_config.get("albedo", [0.5, 0.5, 0.5])
+                albedo = (albedo_list[0], albedo_list[1], albedo_list[2])
+                glow_color_list = mat_config.get("glow_color", [0.0, 1.0, 0.0])
+                glow_color: tuple[float, float, float] = (
+                    glow_color_list[0],
+                    glow_color_list[1],
+                    glow_color_list[2],
+                )
+                glow_intensity = mat_config.get("glow_intensity", 1.0)
+                self.add_phosphorescent_material(albedo, glow_color, glow_intensity)
             else:
                 raise ValueError(f"Unknown material type: {mat_type}")
 

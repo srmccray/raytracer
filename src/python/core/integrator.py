@@ -9,7 +9,7 @@ through the scene, bouncing off surfaces according to their material properties,
 and accumulating radiance along each path.
 
 Key features:
-    - Material dispatch (Lambertian, Metal, Dielectric)
+    - Material dispatch (Lambertian, Metal, Dielectric, Phosphorescent)
     - Russian roulette termination after minimum bounces
     - Progressive sample accumulation for convergence
     - Area light emission support
@@ -46,6 +46,10 @@ from src.python.materials.metal import (
     get_metal_albedo,
     get_metal_roughness,
     scatter_metal,
+)
+from src.python.materials.phosphorescent import (
+    get_phosphorescent_emission_by_id,
+    scatter_phosphorescent_by_id,
 )
 from src.python.scene.intersection import intersect_scene
 from src.python.scene.manager import (
@@ -308,6 +312,12 @@ def _scatter_material(
             ior, incident_direction, normal, front_face
         )
 
+    elif mat_type == int(MaterialType.PHOSPHORESCENT):
+        scattered_direction, attenuation, _ = scatter_phosphorescent_by_id(
+            type_index, normal
+        )
+        did_scatter = 1
+
     return scattered_direction, attenuation, did_scatter
 
 
@@ -315,7 +325,9 @@ def _scatter_material(
 def _get_emission(material_id: ti.i32, hit_point: vec3, normal: vec3) -> vec3:
     """Get the emission from a surface if it is an emitter.
 
-    Currently only the configured area light emits.
+    Handles two types of emission:
+    1. Configured area light (any material assigned to the light quad)
+    2. Phosphorescent materials (always emit their glow_color * glow_intensity)
 
     Args:
         material_id: The material ID of the hit surface.
@@ -327,11 +339,19 @@ def _get_emission(material_id: ti.i32, hit_point: vec3, normal: vec3) -> vec3:
     """
     emission = vec3(0.0, 0.0, 0.0)
 
+    # Check if this is the configured area light
     if _light_enabled[None] == 1:
         if material_id == _light_material_id[None]:
             # Check that we're hitting the front face of the light
             # (light normal should point toward camera)
             emission = _light_emission[None]
+
+    # Check if this is a phosphorescent material (always emits glow)
+    mat_type = get_material_type(material_id)
+    if mat_type == int(MaterialType.PHOSPHORESCENT):
+        type_index = get_material_type_index(material_id)
+        phosphor_emission = get_phosphorescent_emission_by_id(type_index)
+        emission = emission + phosphor_emission
 
     return emission
 

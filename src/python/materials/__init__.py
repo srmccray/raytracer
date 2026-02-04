@@ -6,6 +6,7 @@ Components:
     lambertian: Ideal diffuse (Lambertian) reflection
     metal: Specular reflection with optional roughness
     dielectric: Glass-like materials with refraction (Fresnel equations)
+    phosphorescent: Glow-in-the-dark materials (diffuse + emission)
     material: Base material interface and material registry
 
 Each material provides:
@@ -61,6 +62,24 @@ from .metal import (
     scatter_metal_full,
 )
 
+# Phosphorescent (glow-in-the-dark) material
+from .phosphorescent import (
+    PhosphorescentMaterial,
+    add_phosphorescent_material,
+    clear_phosphorescent_materials,
+    eval_phosphorescent,
+    get_phosphorescent_albedo,
+    get_phosphorescent_emission,
+    get_phosphorescent_emission_by_id,
+    get_phosphorescent_glow_color,
+    get_phosphorescent_glow_intensity,
+    get_phosphorescent_material_count,
+    pdf_phosphorescent,
+    scatter_phosphorescent,
+    scatter_phosphorescent_by_id,
+    scatter_phosphorescent_full,
+)
+
 __all__ = [
     # Lambertian
     "LambertianMaterial",
@@ -94,4 +113,19 @@ __all__ = [
     "get_dielectric_ior",
     "fresnel_reflectance",
     "will_reflect",
+    # Phosphorescent
+    "PhosphorescentMaterial",
+    "eval_phosphorescent",
+    "pdf_phosphorescent",
+    "scatter_phosphorescent",
+    "scatter_phosphorescent_full",
+    "scatter_phosphorescent_by_id",
+    "add_phosphorescent_material",
+    "clear_phosphorescent_materials",
+    "get_phosphorescent_material_count",
+    "get_phosphorescent_albedo",
+    "get_phosphorescent_glow_color",
+    "get_phosphorescent_glow_intensity",
+    "get_phosphorescent_emission",
+    "get_phosphorescent_emission_by_id",
 ]

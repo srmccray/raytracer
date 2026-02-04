@@ -502,5 +502,222 @@ class TestMaterialDispatchIntegration:
         assert scattered_valid[2] == 1  # Dielectric scattered
 
 
+class TestPhosphorescentMaterial:
+    """Tests for phosphorescent material support."""
+
+    def test_add_phosphorescent_material(self, fresh_scene):
+        """Test adding a phosphorescent material."""
+        mat_id = fresh_scene.add_phosphorescent_material(
+            albedo=(0.2, 0.5, 0.2),
+            glow_color=(0.0, 1.0, 0.3),
+            glow_intensity=2.0,
+        )
+        assert mat_id == 0
+        assert fresh_scene.get_material_count() == 1
+
+    def test_phosphorescent_material_type(self, fresh_scene):
+        """Test that phosphorescent material has correct type."""
+        from src.python.scene.manager import MaterialType
+
+        mat_id = fresh_scene.add_phosphorescent_material(
+            albedo=(0.2, 0.5, 0.2),
+            glow_color=(0.0, 1.0, 0.3),
+            glow_intensity=2.0,
+        )
+        assert fresh_scene.get_material_type_python(mat_id) == MaterialType.PHOSPHORESCENT
+
+    def test_phosphorescent_material_info(self, fresh_scene):
+        """Test getting full material info for phosphorescent."""
+        from src.python.scene.manager import MaterialType
+
+        mat_id = fresh_scene.add_phosphorescent_material(
+            albedo=(0.2, 0.5, 0.2),
+            glow_color=(0.0, 1.0, 0.3),
+            glow_intensity=2.0,
+        )
+
+        info = fresh_scene.get_material_info(mat_id)
+        assert info is not None
+        assert info.material_id == mat_id
+        assert info.material_type == MaterialType.PHOSPHORESCENT
+        assert info.type_index == 0
+        assert info.params["albedo"] == (0.2, 0.5, 0.2)
+        assert info.params["glow_color"] == (0.0, 1.0, 0.3)
+        assert info.params["glow_intensity"] == 2.0
+
+    def test_phosphorescent_material_type_enum_value(self, fresh_scene):
+        """Test that PHOSPHORESCENT has the expected enum value."""
+        from src.python.scene.manager import MaterialType
+
+        assert int(MaterialType.PHOSPHORESCENT) == 3
+
+    def test_phosphorescent_material_gpu_lookup(self, fresh_scene):
+        """Test GPU-side material type lookup for phosphorescent."""
+        from src.python.scene.manager import MaterialType, get_material_type
+
+        fresh_scene.add_phosphorescent_material(
+            albedo=(0.2, 0.5, 0.2),
+            glow_color=(0.0, 1.0, 0.3),
+            glow_intensity=2.0,
+        )
+
+        result = ti.field(dtype=ti.i32, shape=1)
+
+        @ti.kernel
+        def test_kernel():
+            result[0] = get_material_type(0)
+
+        test_kernel()
+
+        assert result[0] == int(MaterialType.PHOSPHORESCENT)
+
+    def test_phosphorescent_material_validation_albedo(self, fresh_scene):
+        """Test that invalid albedo raises ValueError for phosphorescent."""
+        with pytest.raises(ValueError):
+            fresh_scene.add_phosphorescent_material(
+                albedo=(1.5, 0.0, 0.0),  # Invalid: > 1.0
+                glow_color=(0.0, 1.0, 0.0),
+                glow_intensity=1.0,
+            )
+
+    def test_phosphorescent_material_validation_glow_intensity(self, fresh_scene):
+        """Test that negative glow_intensity raises ValueError."""
+        with pytest.raises(ValueError):
+            fresh_scene.add_phosphorescent_material(
+                albedo=(0.5, 0.5, 0.5),
+                glow_color=(0.0, 1.0, 0.0),
+                glow_intensity=-1.0,  # Invalid: negative
+            )
+
+    def test_add_phosphorescent_sphere(self, fresh_scene):
+        """Test add_phosphorescent_sphere convenience method."""
+        from src.python.scene.manager import MaterialType
+
+        sphere_idx, mat_id = fresh_scene.add_phosphorescent_sphere(
+            center=(0.0, 0.0, -1.0),
+            radius=0.5,
+            albedo=(0.2, 0.5, 0.2),
+            glow_color=(0.0, 1.0, 0.3),
+            glow_intensity=2.0,
+        )
+
+        assert sphere_idx == 0
+        assert mat_id == 0
+        assert fresh_scene.get_sphere_count() == 1
+        assert fresh_scene.get_material_count() == 1
+        assert fresh_scene.get_material_type_python(mat_id) == MaterialType.PHOSPHORESCENT
+
+    def test_add_phosphorescent_quad(self, fresh_scene):
+        """Test add_phosphorescent_quad convenience method."""
+        from src.python.scene.manager import MaterialType
+
+        quad_idx, mat_id = fresh_scene.add_phosphorescent_quad(
+            corner=(-1.0, -1.0, -2.0),
+            edge_u=(2.0, 0.0, 0.0),
+            edge_v=(0.0, 2.0, 0.0),
+            albedo=(0.2, 0.5, 0.2),
+            glow_color=(0.0, 1.0, 0.3),
+            glow_intensity=2.0,
+        )
+
+        assert quad_idx == 0
+        assert mat_id == 0
+        assert fresh_scene.get_quad_count() == 1
+        assert fresh_scene.get_material_type_python(mat_id) == MaterialType.PHOSPHORESCENT
+
+    def test_phosphorescent_serialization(self, fresh_scene):
+        """Test phosphorescent material serialization (to_config/from_config)."""
+        from src.python.scene.manager import MaterialType
+
+        # Build scene with phosphorescent material
+        mat_id = fresh_scene.add_phosphorescent_material(
+            albedo=(0.2, 0.5, 0.2),
+            glow_color=(0.0, 1.0, 0.3),
+            glow_intensity=2.0,
+        )
+        fresh_scene.add_sphere(center=(0.0, 0.0, -1.0), radius=0.5, material_id=mat_id)
+
+        # Export to config
+        config = fresh_scene.to_config()
+        assert len(config.materials) == 1
+        assert config.materials[0]["type"] == "phosphorescent"
+        assert config.materials[0]["albedo"] == (0.2, 0.5, 0.2)
+        assert config.materials[0]["glow_color"] == (0.0, 1.0, 0.3)
+        assert config.materials[0]["glow_intensity"] == 2.0
+
+        # Clear and reload
+        fresh_scene.clear()
+        fresh_scene.from_config(config)
+
+        assert fresh_scene.get_material_count() == 1
+        assert fresh_scene.get_sphere_count() == 1
+        assert fresh_scene.get_material_type_python(0) == MaterialType.PHOSPHORESCENT
+
+    def test_phosphorescent_from_dict(self, fresh_scene):
+        """Test loading phosphorescent material from dict."""
+        from src.python.scene.manager import MaterialType
+
+        data = {
+            "materials": [
+                {
+                    "type": "phosphorescent",
+                    "albedo": [0.2, 0.5, 0.2],
+                    "glow_color": [0.0, 1.0, 0.3],
+                    "glow_intensity": 2.0,
+                }
+            ],
+            "spheres": [{"center": [0.0, 0.0, -1.0], "radius": 0.5, "material_id": 0}],
+            "quads": [],
+        }
+
+        fresh_scene.from_dict(data)
+
+        assert fresh_scene.get_material_count() == 1
+        assert fresh_scene.get_material_type_python(0) == MaterialType.PHOSPHORESCENT
+
+    def test_mixed_materials_with_phosphorescent(self, fresh_scene):
+        """Test mixed material types including phosphorescent."""
+        from src.python.scene.manager import MaterialType, get_material_type
+
+        # Add materials in mixed order
+        id0 = fresh_scene.add_lambertian_material(albedo=(0.8, 0.3, 0.3))
+        id1 = fresh_scene.add_phosphorescent_material(
+            albedo=(0.2, 0.5, 0.2),
+            glow_color=(0.0, 1.0, 0.3),
+            glow_intensity=2.0,
+        )
+        id2 = fresh_scene.add_metal_material(albedo=(0.8, 0.6, 0.2), roughness=0.3)
+        id3 = fresh_scene.add_dielectric_material(ior=1.5)
+
+        assert id0 == 0
+        assert id1 == 1
+        assert id2 == 2
+        assert id3 == 3
+        assert fresh_scene.get_material_count() == 4
+
+        # Verify types from Python
+        assert fresh_scene.get_material_type_python(0) == MaterialType.LAMBERTIAN
+        assert fresh_scene.get_material_type_python(1) == MaterialType.PHOSPHORESCENT
+        assert fresh_scene.get_material_type_python(2) == MaterialType.METAL
+        assert fresh_scene.get_material_type_python(3) == MaterialType.DIELECTRIC
+
+        # Verify types from GPU
+        result = ti.field(dtype=ti.i32, shape=4)
+
+        @ti.kernel
+        def test_kernel():
+            result[0] = get_material_type(0)
+            result[1] = get_material_type(1)
+            result[2] = get_material_type(2)
+            result[3] = get_material_type(3)
+
+        test_kernel()
+
+        assert result[0] == int(MaterialType.LAMBERTIAN)
+        assert result[1] == int(MaterialType.PHOSPHORESCENT)
+        assert result[2] == int(MaterialType.METAL)
+        assert result[3] == int(MaterialType.DIELECTRIC)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

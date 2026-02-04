@@ -9,7 +9,7 @@ The Cornell box consists of:
 - Left wall: red diffuse
 - Right wall: green diffuse
 - Back, floor, ceiling: white diffuse
-- 3 spheres with different materials (diffuse, metal, glass)
+- 3 spheres with different materials (diffuse, phosphorescent, glass)
 - Area light on the ceiling (emissive quad)
 
 The classic Cornell box dimensions are approximately 555x555x555 units, but we
@@ -48,9 +48,12 @@ LIGHT_ALBEDO = (1.0, 1.0, 1.0)
 
 # Sphere materials
 DIFFUSE_SPHERE_ALBEDO = (0.73, 0.73, 0.73)  # White diffuse
-METAL_SPHERE_ALBEDO = (0.95, 0.93, 0.88)  # Silver color
-METAL_SPHERE_ROUGHNESS = 0.1  # Slightly rough for visible highlights
 GLASS_SPHERE_IOR = 1.5  # Standard glass
+
+# Phosphorescent sphere parameters (glow-in-the-dark effect)
+PHOSPHORESCENT_SPHERE_ALBEDO = (0.8, 0.9, 0.8)  # Light greenish-white when lit
+PHOSPHORESCENT_SPHERE_GLOW_COLOR = (0.2, 0.8, 0.3)  # Green phosphorescent emission
+PHOSPHORESCENT_SPHERE_GLOW_INTENSITY = 2.0  # Bright enough to see glow effect
 
 
 # =============================================================================
@@ -67,7 +70,7 @@ def create_cornell_box_scene(
     - Red left wall, green right wall
     - White back wall, floor, and ceiling
     - Area light on ceiling (white diffuse placeholder)
-    - Three spheres: diffuse (white), metal (silver), glass
+    - Three spheres: diffuse (white), phosphorescent (green glow), glass
 
     The coordinate system places the box origin at (0, 0, 0) with:
     - X-axis: left to right (0 to box_size)
@@ -106,9 +109,10 @@ def create_cornell_box_scene(
 
     # Sphere materials
     diffuse_mat = scene.add_lambertian_material(albedo=DIFFUSE_SPHERE_ALBEDO)
-    metal_mat = scene.add_metal_material(
-        albedo=METAL_SPHERE_ALBEDO,
-        roughness=METAL_SPHERE_ROUGHNESS,
+    phosphorescent_mat = scene.add_phosphorescent_material(
+        albedo=PHOSPHORESCENT_SPHERE_ALBEDO,
+        glow_color=PHOSPHORESCENT_SPHERE_GLOW_COLOR,
+        glow_intensity=PHOSPHORESCENT_SPHERE_GLOW_INTENSITY,
     )
     glass_mat = scene.add_dielectric_material(ior=GLASS_SPHERE_IOR)
 
@@ -202,17 +206,17 @@ def create_cornell_box_scene(
         material_id=diffuse_mat,
     )
 
-    # Metal sphere (silver) - right side, on floor
-    metal_sphere_radius = 80.0
-    metal_sphere_center = (
+    # Phosphorescent sphere (green glow) - right side, on floor
+    phosphorescent_sphere_radius = 80.0
+    phosphorescent_sphere_center = (
         box_size * 0.73,  # Right of center
-        metal_sphere_radius,  # Resting on floor
+        phosphorescent_sphere_radius,  # Resting on floor
         box_size * 0.35,  # Toward front
     )
     scene.add_sphere(
-        center=metal_sphere_center,
-        radius=metal_sphere_radius,
-        material_id=metal_mat,
+        center=phosphorescent_sphere_center,
+        radius=phosphorescent_sphere_radius,
+        material_id=phosphorescent_mat,
     )
 
     # Glass sphere - center, on floor

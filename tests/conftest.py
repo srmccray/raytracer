@@ -31,6 +31,7 @@ def clear_all_scene_data():
     from src.python.materials.dielectric import clear_dielectric_materials
     from src.python.materials.lambertian import clear_lambertian_materials
     from src.python.materials.metal import clear_metal_materials
+    from src.python.materials.phosphorescent import clear_phosphorescent_materials
     from src.python.scene.intersection import clear_scene
     from src.python.scene.manager import _clear_material_tracking
 
@@ -39,6 +40,7 @@ def clear_all_scene_data():
         clear_lambertian_materials()
         clear_metal_materials()
         clear_dielectric_materials()
+        clear_phosphorescent_materials()
         _clear_material_tracking()
 
         # Also clear integrator render target if it exists
