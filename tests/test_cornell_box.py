@@ -278,7 +278,7 @@ class TestSphereGeometry:
         assert abs(metal_sphere.center[1] - metal_sphere.radius) < 0.01
 
     def test_glass_sphere_position(self, cornell_box_scene):
-        """Test glass sphere is centered and elevated."""
+        """Test glass sphere is centered and on floor."""
         from src.python.scene.cornell_box import BOX_SIZE
 
         scene, _ = cornell_box_scene
@@ -286,8 +286,8 @@ class TestSphereGeometry:
 
         # Should be near center (x approximately at center)
         assert abs(glass_sphere.center[0] - BOX_SIZE / 2.0) < 1.0
-        # Should be elevated above floor
-        assert glass_sphere.center[1] > glass_sphere.radius
+        # Should be resting on floor (y = radius)
+        assert abs(glass_sphere.center[1] - glass_sphere.radius) < 0.01
 
     def test_diffuse_sphere_material(self, cornell_box_scene):
         """Test diffuse sphere has Lambertian material."""

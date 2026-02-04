@@ -48,7 +48,7 @@ LIGHT_ALBEDO = (1.0, 1.0, 1.0)
 
 # Sphere materials
 DIFFUSE_SPHERE_ALBEDO = (0.73, 0.73, 0.73)  # White diffuse
-METAL_SPHERE_ALBEDO = (0.83, 0.69, 0.22)  # Gold color
+METAL_SPHERE_ALBEDO = (0.95, 0.93, 0.88)  # Silver color
 METAL_SPHERE_ROUGHNESS = 0.1  # Slightly rough for visible highlights
 GLASS_SPHERE_IOR = 1.5  # Standard glass
 
@@ -67,7 +67,7 @@ def create_cornell_box_scene(
     - Red left wall, green right wall
     - White back wall, floor, and ceiling
     - Area light on ceiling (white diffuse placeholder)
-    - Three spheres: diffuse (white), metal (gold), glass
+    - Three spheres: diffuse (white), metal (silver), glass
 
     The coordinate system places the box origin at (0, 0, 0) with:
     - X-axis: left to right (0 to box_size)
@@ -202,7 +202,7 @@ def create_cornell_box_scene(
         material_id=diffuse_mat,
     )
 
-    # Metal sphere (gold) - right side, on floor
+    # Metal sphere (silver) - right side, on floor
     metal_sphere_radius = 80.0
     metal_sphere_center = (
         box_size * 0.73,  # Right of center
@@ -215,11 +215,11 @@ def create_cornell_box_scene(
         material_id=metal_mat,
     )
 
-    # Glass sphere - center, slightly elevated
-    glass_sphere_radius = 65.0
+    # Glass sphere - center, on floor
+    glass_sphere_radius = 80.0
     glass_sphere_center = (
         box_size * 0.5,  # Center
-        glass_sphere_radius + 40.0,  # Slightly elevated above floor
+        glass_sphere_radius,  # Resting on floor
         box_size * 0.65,  # Toward back
     )
     scene.add_sphere(

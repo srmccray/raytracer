@@ -22,6 +22,19 @@ All BSDF computations are implemented as Taichi functions for GPU execution.
 """
 
 # Lambertian (ideal diffuse) material
+# Dielectric (glass/water) material
+from .dielectric import (
+    DielectricMaterial,
+    add_dielectric_material,
+    clear_dielectric_materials,
+    fresnel_reflectance,
+    get_dielectric_ior,
+    get_dielectric_material_count,
+    scatter_dielectric,
+    scatter_dielectric_by_id,
+    scatter_dielectric_full,
+    will_reflect,
+)
 from .lambertian import (
     LambertianMaterial,
     add_lambertian_material,
@@ -46,20 +59,6 @@ from .metal import (
     scatter_metal,
     scatter_metal_by_id,
     scatter_metal_full,
-)
-
-# Dielectric (glass/water) material
-from .dielectric import (
-    DielectricMaterial,
-    add_dielectric_material,
-    clear_dielectric_materials,
-    fresnel_reflectance,
-    get_dielectric_ior,
-    get_dielectric_material_count,
-    scatter_dielectric,
-    scatter_dielectric_by_id,
-    scatter_dielectric_full,
-    will_reflect,
 )
 
 __all__ = [
