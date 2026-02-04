@@ -12,6 +12,12 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## Commit Conventions
+
+- Do NOT include AI attribution (Co-Authored-By lines) in commit messages
+- Keep commit messages concise and descriptive
+- Use conventional commit style when appropriate (feat:, fix:, etc.)
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
