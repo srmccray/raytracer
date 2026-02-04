@@ -436,7 +436,7 @@ class TestCornellBoxRendering:
 
         setup_render_target(32, 32)
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         # Setup light for Cornell box
@@ -467,7 +467,7 @@ class TestCornellBoxRendering:
 
         setup_render_target(32, 32)
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         # Setup light

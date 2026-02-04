@@ -9,7 +9,7 @@ The Cornell box consists of:
 - Left wall: red diffuse
 - Right wall: green diffuse
 - Back, floor, ceiling: white diffuse
-- 3 spheres with different materials (diffuse, phosphorescent, glass)
+- 3 spheres with different materials (diffuse, metal, glass)
 - Area light on the ceiling (emissive quad)
 
 The classic Cornell box dimensions are approximately 555x555x555 units, but we
@@ -27,8 +27,56 @@ Example:
     >>> # Now render using the scene and camera
 """
 
+from dataclasses import dataclass
+
 from src.python.camera.pinhole import PinholeCamera
 from src.python.scene.manager import SceneManager
+
+# =============================================================================
+# Cornell Box Parameters (for interactive preview)
+# =============================================================================
+
+
+@dataclass
+class CornellBoxParams:
+    """Parameters for configuring a Cornell box scene.
+
+    This dataclass provides a convenient way to customize the Cornell box
+    scene for interactive preview and rendering. All parameters have defaults
+    matching the classic Cornell box configuration.
+
+    Attributes:
+        light_intensity: The intensity/brightness of the area light.
+            Default is 15.0, which provides good illumination for the scene.
+        light_color: RGB color of the light (each component in [0, 1]).
+            Default is white (1.0, 1.0, 1.0).
+        left_wall_color: RGB albedo of the left wall.
+            Default is green (0.12, 0.45, 0.15).
+        right_wall_color: RGB albedo of the right wall.
+            Default is red (0.65, 0.05, 0.05).
+        back_wall_color: RGB albedo of the back wall.
+            Default is white (0.73, 0.73, 0.73).
+
+    Example:
+        >>> params = CornellBoxParams()
+        >>> params.light_intensity
+        15.0
+        >>> params.left_wall_color
+        (0.12, 0.45, 0.15)
+
+        >>> # Custom parameters
+        >>> custom = CornellBoxParams(
+        ...     light_intensity=20.0,
+        ...     light_color=(1.0, 0.9, 0.8),  # Warm light
+        ...     left_wall_color=(0.2, 0.2, 0.8),  # Blue wall
+        ... )
+    """
+
+    light_intensity: float = 15.0
+    light_color: tuple[float, float, float] = (1.0, 1.0, 1.0)
+    left_wall_color: tuple[float, float, float] = (0.12, 0.45, 0.15)
+    right_wall_color: tuple[float, float, float] = (0.65, 0.05, 0.05)
+    back_wall_color: tuple[float, float, float] = (0.73, 0.73, 0.73)
 
 # =============================================================================
 # Cornell Box Constants
@@ -50,10 +98,9 @@ LIGHT_ALBEDO = (1.0, 1.0, 1.0)
 DIFFUSE_SPHERE_ALBEDO = (0.73, 0.73, 0.73)  # White diffuse
 GLASS_SPHERE_IOR = 1.5  # Standard glass
 
-# Phosphorescent sphere parameters (glow-in-the-dark effect)
-PHOSPHORESCENT_SPHERE_ALBEDO = (0.8, 0.9, 0.8)  # Light greenish-white when lit
-PHOSPHORESCENT_SPHERE_GLOW_COLOR = (0.2, 0.8, 0.3)  # Green phosphorescent emission
-PHOSPHORESCENT_SPHERE_GLOW_INTENSITY = 2.0  # Bright enough to see glow effect
+# Metal sphere parameters (silver/chrome appearance)
+METAL_SPHERE_ALBEDO = (0.95, 0.93, 0.88)  # Silver reflectance
+METAL_SPHERE_ROUGHNESS = 0.3  # Slightly rough for soft reflections
 
 
 # =============================================================================
@@ -63,14 +110,15 @@ PHOSPHORESCENT_SPHERE_GLOW_INTENSITY = 2.0  # Bright enough to see glow effect
 
 def create_cornell_box_scene(
     box_size: float = BOX_SIZE,
-) -> tuple[SceneManager, PinholeCamera]:
+    params: CornellBoxParams | None = None,
+) -> tuple[SceneManager, PinholeCamera, int]:
     """Create a Cornell box scene with standard configuration.
 
     Creates the classic Cornell box test scene with:
-    - Red left wall, green right wall
-    - White back wall, floor, and ceiling
-    - Area light on ceiling (white diffuse placeholder)
-    - Three spheres: diffuse (white), phosphorescent (green glow), glass
+    - Red left wall, green right wall (colors configurable via params)
+    - White back wall, floor, and ceiling (back wall color configurable)
+    - Area light on ceiling (emissive, intensity/color configurable via params)
+    - Three spheres: diffuse (white), metal (silver), glass
 
     The coordinate system places the box origin at (0, 0, 0) with:
     - X-axis: left to right (0 to box_size)
@@ -80,39 +128,56 @@ def create_cornell_box_scene(
     Args:
         box_size: The size of the box in each dimension. Default is 555.0
             (classic Cornell box dimensions).
+        params: Optional CornellBoxParams for customizing light and wall colors.
+            If None, uses default CornellBoxParams().
 
     Returns:
-        A tuple of (SceneManager, PinholeCamera) where:
+        A tuple of (SceneManager, PinholeCamera, light_material_id) where:
         - SceneManager contains all geometry and materials
         - PinholeCamera is configured for the standard view
+        - light_material_id is the material ID of the area light (for dynamic updates)
 
     Example:
-        >>> scene, camera = create_cornell_box_scene()
+        >>> scene, camera, light_mat_id = create_cornell_box_scene()
         >>> print(f"Scene has {scene.get_quad_count()} quads")
         Scene has 6 quads
         >>> print(f"Scene has {scene.get_sphere_count()} spheres")
         Scene has 3 spheres
+
+        >>> # With custom parameters
+        >>> custom_params = CornellBoxParams(light_intensity=20.0)
+        >>> scene, camera, light_mat_id = create_cornell_box_scene(params=custom_params)
     """
+    # Use default params if none provided
+    if params is None:
+        params = CornellBoxParams()
+
     scene = SceneManager()
 
     # =========================================================================
     # Materials
     # =========================================================================
 
-    # Wall materials
-    red_mat = scene.add_lambertian_material(albedo=RED_WALL_ALBEDO)
-    green_mat = scene.add_lambertian_material(albedo=GREEN_WALL_ALBEDO)
-    white_mat = scene.add_lambertian_material(albedo=WHITE_WALL_ALBEDO)
+    # Wall materials (use params for configurable colors)
+    # Note: left_wall uses right_wall_color (red) and right_wall uses left_wall_color (green)
+    # because of the classic Cornell box convention where red is on the right as you look in
+    red_mat = scene.add_lambertian_material(albedo=params.right_wall_color)
+    green_mat = scene.add_lambertian_material(albedo=params.left_wall_color)
+    white_mat = scene.add_lambertian_material(albedo=params.back_wall_color)
 
-    # Light material (placeholder - actual emission handled by renderer)
-    light_mat = scene.add_lambertian_material(albedo=LIGHT_ALBEDO)
+    # Light material (emissive - uses phosphorescent material for emission support)
+    # The phosphorescent material computes emission as: glow_color * glow_intensity
+    light_mat = scene.add_phosphorescent_material(
+        albedo=LIGHT_ALBEDO,
+        glow_color=params.light_color,
+        glow_intensity=params.light_intensity,
+    )
 
     # Sphere materials
     diffuse_mat = scene.add_lambertian_material(albedo=DIFFUSE_SPHERE_ALBEDO)
-    phosphorescent_mat = scene.add_phosphorescent_material(
-        albedo=PHOSPHORESCENT_SPHERE_ALBEDO,
-        glow_color=PHOSPHORESCENT_SPHERE_GLOW_COLOR,
-        glow_intensity=PHOSPHORESCENT_SPHERE_GLOW_INTENSITY,
+    metal_mat = scene.add_metal_material(
+        albedo=METAL_SPHERE_ALBEDO,
+        roughness=METAL_SPHERE_ROUGHNESS,
     )
     glass_mat = scene.add_dielectric_material(ior=GLASS_SPHERE_IOR)
 
@@ -206,17 +271,17 @@ def create_cornell_box_scene(
         material_id=diffuse_mat,
     )
 
-    # Phosphorescent sphere (green glow) - right side, on floor
-    phosphorescent_sphere_radius = 80.0
-    phosphorescent_sphere_center = (
+    # Metal sphere (silver) - right side, on floor
+    metal_sphere_radius = 80.0
+    metal_sphere_center = (
         box_size * 0.73,  # Right of center
-        phosphorescent_sphere_radius,  # Resting on floor
+        metal_sphere_radius,  # Resting on floor
         box_size * 0.35,  # Toward front
     )
     scene.add_sphere(
-        center=phosphorescent_sphere_center,
-        radius=phosphorescent_sphere_radius,
-        material_id=phosphorescent_mat,
+        center=metal_sphere_center,
+        radius=metal_sphere_radius,
+        material_id=metal_mat,
     )
 
     # Glass sphere - center, on floor
@@ -255,7 +320,7 @@ def create_cornell_box_scene(
         aspect_ratio=1.0,  # Square image (classic Cornell box)
     )
 
-    return scene, camera
+    return scene, camera, light_mat
 
 
 def get_light_quad_info(box_size: float = BOX_SIZE) -> dict[str, tuple[float, float, float]]:

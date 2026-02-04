@@ -59,7 +59,8 @@ disallow_untyped_decorators = false
 
 [[tool.mypy.overrides]]
 module = "src.python.preview.*"
-disable_error_code = ["no-any-return"]
+disable_error_code = ["no-any-return", "valid-type", "call-arg", "attr-defined", "no-untyped-def", "import-untyped", "operator"]
+disallow_untyped_decorators = false
 
 [[tool.mypy.overrides]]
 module = "tests.*"

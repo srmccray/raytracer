@@ -38,7 +38,7 @@ class TestCornellBoxIntegration:
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
         # Create scene
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         # Configure light
@@ -69,7 +69,7 @@ class TestCornellBoxIntegration:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -94,7 +94,7 @@ class TestCornellBoxIntegration:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -119,7 +119,7 @@ class TestCornellBoxIntegration:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -144,7 +144,7 @@ class TestCornellBoxIntegration:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -173,7 +173,7 @@ class TestCornellBoxIntegration:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -201,7 +201,7 @@ class TestCornellBoxIntegration:
         from src.python.preview.export import save_png
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -234,7 +234,7 @@ class TestCornellBoxIntegration:
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
         def render_scene() -> npt.NDArray[np.float32]:
-            scene, camera = create_cornell_box_scene()
+            scene, camera, _ = create_cornell_box_scene()
             setup_camera(camera)
 
             light_info = get_light_quad_info()
@@ -275,7 +275,7 @@ class TestProgressiveRefinement:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -302,7 +302,7 @@ class TestProgressiveRefinement:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -335,7 +335,7 @@ class TestProgressiveRefinement:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -366,7 +366,7 @@ class TestIntegrationWithDifferentMaterials:
         from src.python.scene.cornell_box import create_cornell_box_scene
 
         # Cornell box already has all three material types
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
         disable_light()  # Render without light to test material interactions
 
@@ -388,7 +388,7 @@ class TestImageQuality:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -414,7 +414,7 @@ class TestImageQuality:
         from src.python.core.progressive import ProgressiveRenderer
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()
@@ -452,7 +452,7 @@ class TestHighQualityRender:
         from src.python.preview.export import save_png
         from src.python.scene.cornell_box import create_cornell_box_scene, get_light_quad_info
 
-        scene, camera = create_cornell_box_scene()
+        scene, camera, _ = create_cornell_box_scene()
         setup_camera(camera)
 
         light_info = get_light_quad_info()

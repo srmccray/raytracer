@@ -24,6 +24,7 @@ Scene data is organized for efficient GPU access:
 # Cornell box scene
 from .cornell_box import (
     BOX_SIZE,
+    CornellBoxParams,
     create_cornell_box_scene,
     get_cornell_box_bounds,
     get_light_quad_info,
@@ -84,6 +85,7 @@ __all__ = [
     "num_materials",
     # Cornell box module
     "create_cornell_box_scene",
+    "CornellBoxParams",
     "get_cornell_box_bounds",
     "get_light_quad_info",
     "BOX_SIZE",
