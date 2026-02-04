@@ -21,3 +21,4 @@ target/
 # IDE
 .vscode/
 .idea/
+experiments/
